@@ -42,7 +42,7 @@ export default function RepairStatusPieChart() {
 
   // Process raw data into chart data and config when rawData changes
   React.useEffect(() => {
-    if (rawData.length > 0) {
+    if (rawData?.length > 0) {
       const statusCounts  = {}
       rawData.forEach((item) => {
         const status = item.repair_status

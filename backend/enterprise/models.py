@@ -32,7 +32,7 @@ class Person(models.Model):
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     due = models.IntegerField(null=True, blank=True)
-    technician_profit = models.IntegerField()
+    technician_profit = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.name} - {self.role} at {self.enterprise.name}"

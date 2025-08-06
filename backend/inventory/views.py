@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.pagination import PageNumberPagination
 from .models import PurchaseTransaction,Category,Item,Purchase
 from .serializers import PurchaseTransactionSerializer,CategorySerializer,ItemSerializer,PurchaseSerializer
 from django.db import transaction
@@ -11,33 +13,54 @@ from django.db.models import Q
 # Create your views here.
 
 
+class PurchaseTransactionPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
 class PurchaseTransactionView(APIView):
 
     permission_classes = [IsAuthenticated]
+    pagination_class = PurchaseTransactionPagination
 
     def _get_locked_item(self, item_id, cache):
         if item_id not in cache:
             cache[item_id] = Item.objects.select_for_update().get(id=item_id)
         return cache[item_id]
 
-
-
-    def get(self, request,pk=None):
-        
+    def get(self, request, pk=None):
         if pk:
             purchase_transaction = PurchaseTransaction.objects.get(id=pk)
             serializer = PurchaseTransactionSerializer(purchase_transaction)
             return Response(serializer.data)
         
-        
+        # Get all purchase transactions for the enterprise
         purchase_transactions = PurchaseTransaction.objects.filter(enterprise=request.user.person.enterprise)
         purchase_transactions = purchase_transactions.order_by('-id')
+        
+        # Apply search filter
         search = request.GET.get('search')
         if search:
-            purchase_transaction_product = PurchaseTransaction.objects.filter(purchases__product__icontains = search)
-            purchase_transactions = purchase_transaction_product
-        serializer = PurchaseTransactionSerializer(purchase_transactions, many=True)
-        return Response(serializer.data)
+            purchase_transactions = purchase_transactions.filter(purchases__product__icontains=search)
+        
+        # Apply date filters
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        if start_date and end_date:
+            start_date_parsed = parse_date(start_date)
+            end_date_parsed = parse_date(end_date)
+            if start_date_parsed and end_date_parsed:
+                purchase_transactions = purchase_transactions.filter(
+                    date__range=(start_date_parsed, end_date_parsed)
+                )
+        
+        # Apply pagination
+        paginator = self.pagination_class()
+        paginated_transactions = paginator.paginate_queryset(purchase_transactions, request)
+        serializer = PurchaseTransactionSerializer(paginated_transactions, many=True)
+        
+        return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
         data = request.data
