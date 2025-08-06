@@ -22,10 +22,11 @@ class PurchaseSerializer(ModelSerializer):
     id = serializers.IntegerField(required=False)
     # include item name for frontend display
     item_name = serializers.CharField(source='item.name', read_only=True)
+    item_category = serializers.CharField(source='item.category.name', read_only=True)
     class Meta:
         model = Purchase 
         # include item_name alongside item id, quantity, price
-        fields = ['id', 'item', 'item_name', 'quantity', 'price']
+        fields = ['id', 'item', 'item_name', 'item_category', 'quantity', 'price']
 
 class PurchaseTransactionSerializer(ModelSerializer):
     purchases = PurchaseSerializer(many=True)
@@ -47,3 +48,21 @@ class PurchaseTransactionSerializer(ModelSerializer):
 
     def get_purchased_by_name(self, obj):
         return obj.purchased_by.user.name if obj.purchased_by else None
+
+
+class PurchaseReportSerializer(PurchaseSerializer):
+    """
+    Extended serializer for purchase reports with additional transaction details
+    """
+    transaction_date = serializers.DateField(source='transaction.date', read_only=True)
+    purchased_by_name = serializers.CharField(source='transaction.purchased_by.user.name', read_only=True)
+    transaction_id = serializers.IntegerField(source='transaction.id', read_only=True)
+    total_cost = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Purchase
+        fields = ['id', 'item', 'item_name', 'item_category', 'quantity', 'price', 
+                 'transaction_date', 'purchased_by_name', 'transaction_id', 'total_cost']
+    
+    def get_total_cost(self, obj):
+        return obj.price * obj.quantity

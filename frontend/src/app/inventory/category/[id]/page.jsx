@@ -78,19 +78,19 @@ export default function InventoryPageComponent() {
   console.log("items", filteredItems)
 
   if (loading) return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-black">
+    <div className="flex items-center justify-center text-black">
       Loading...
     </div>
   )
   
   if (error) return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-red-500">
+    <div className="flex items-center justify-center from-slate-900 to-slate-800 text-red-500">
       {error}
     </div>
   )
 
   return (
-      <div className="p-3 bg-inherit text-black h-[90%]">
+      <div className="p-3 bg-inherit text-black overflow-y-scroll h-[90%]">
         <div className="max-w-6xl mx-auto">
         <div className="flex justify-end mb-4">
           <Button

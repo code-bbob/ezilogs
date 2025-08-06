@@ -136,7 +136,7 @@ export default function AllPurchaseTransactions() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100 text-gray-800">
+      <div className="flex items-center justify-center bg-gray-100 text-gray-800">
         Loading...
       </div>
     )
@@ -144,14 +144,14 @@ export default function AllPurchaseTransactions() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100 text-red-500">
+      <div className="flex items-center justify-center bg-gray-100 text-red-500">
         {error}
       </div>
     )
   }
 
   return (
-    <div className="flex  bg-gray-100">
+    <div className="flex container h-[90vh] overflow-y-scroll bg-gray-100">
       <div className="flex-grow p-6 ">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -160,14 +160,22 @@ export default function AllPurchaseTransactions() {
           className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6"
         >
           <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4 lg:mb-0">Purchase Transactions</h1>
-          <Button
-            onClick={() => router.push('/')}
-            variant="outline"
-            className="w-full lg:w-auto px-5 text-gray-700 border-gray-300 hover:bg-gray-100"
-          >
-            <ArrowLeft className="mr-2 h-4 w-3 text-gray-700" />
-            Back to Dashboard
-          </Button>
+          <div className="flex flex-col lg:flex-row gap-2">
+            <Button
+              onClick={() => router.push('/purchase/report')}
+              className="w-full lg:w-auto px-5 bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              View Report
+            </Button>
+            <Button
+              onClick={() => router.push('/')}
+              variant="outline"
+              className="w-full lg:w-auto px-5 text-gray-700 border-gray-300 hover:bg-gray-100"
+            >
+              <ArrowLeft className="mr-2 h-4 w-3 text-gray-700" />
+              Back to Dashboard
+            </Button>
+          </div>
         </motion.div>
 
         <div className="mb-6 space-y-4 lg:space-y-0 lg:flex lg:flex-wrap lg:items-center lg:gap-4">

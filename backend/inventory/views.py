@@ -3,9 +3,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework import status
-from .models import PurchaseTransaction,Category,Item
-from .serializers import PurchaseTransactionSerializer,CategorySerializer,ItemSerializer
+from .models import PurchaseTransaction,Category,Item,Purchase
+from .serializers import PurchaseTransactionSerializer,CategorySerializer,ItemSerializer,PurchaseSerializer
 from django.db import transaction
+from django.utils.dateparse import parse_date
+from django.db.models import Q
 # Create your views here.
 
 
@@ -135,3 +137,70 @@ class ItemView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class PurchaseReportView(APIView):
+    """
+    API View for generating purchase reports with filtering capabilities
+    Returns individual purchase records (not grouped by transaction)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get query parameters
+        search_term = request.GET.get('search', '')
+        item_name = request.GET.get('item_name', '')
+        category_name = request.GET.get('category', '')
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        
+        # Base queryset - get all purchases for the user's enterprise
+        purchases = Purchase.objects.filter(
+            transaction__enterprise=request.user.person.enterprise
+        ).select_related('item', 'item__category', 'transaction')
+        
+        # Apply date range filter if provided
+        if start_date and end_date:
+            start_date_parsed = parse_date(start_date)
+            end_date_parsed = parse_date(end_date)
+            if start_date_parsed and end_date_parsed:
+                purchases = purchases.filter(
+                    transaction__date__range=(start_date_parsed, end_date_parsed)
+                )
+        
+        # Apply search filters
+        if search_term:
+            # Search across multiple fields using Q objects
+            search_query = Q()
+            search_query |= Q(item__name__icontains=search_term)
+            search_query |= Q(item__category__name__icontains=search_term)
+            search_query |= Q(transaction__purchased_by__user__name__icontains=search_term)
+            purchases = purchases.filter(search_query)
+        
+        # Apply specific filters
+        if item_name:
+            purchases = purchases.filter(item__name__icontains=item_name)
+        
+        if category_name:
+            purchases = purchases.filter(item__category__name__icontains=category_name)
+        
+        # Order by most recent transactions first
+        purchases = purchases.order_by('-transaction__date', '-id')
+        
+        # Serialize the data
+        from .serializers import PurchaseReportSerializer
+        serializer = PurchaseReportSerializer(purchases, many=True)
+        
+        # Calculate summary statistics
+        total_purchases = purchases.count()
+        total_amount = sum(p.price * p.quantity for p in purchases)
+        total_quantity = sum(p.quantity for p in purchases)
+        
+        # Return response with data and summary
+        return Response({
+            'purchases': serializer.data,
+            'summary': {
+                'total_purchases': total_purchases,
+                'total_amount': total_amount,
+                'total_quantity': total_quantity,
+                'average_price': total_amount / total_purchases if total_purchases > 0 else 0
+            }
+        })

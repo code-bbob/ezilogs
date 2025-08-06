@@ -1,4 +1,4 @@
-"use client"
+  "use client"
 
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
@@ -105,7 +105,9 @@ export default function InventoryPageComponent() {
   }
 
   return (
-    <div className="container mx-auto px-6 py-8 bg-gray-50 text-gray-700 ">
+    <div className="container h-[90vh] overflow-y-scroll mx-auto px-6 py-8 bg-gray-50 text-gray-700 ">
+      <div className="flex">
+
       <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
         Inventory Categories
       </h1>
@@ -119,6 +121,7 @@ export default function InventoryPageComponent() {
           onChange={handleSearch}
           className="flex-1 border-none outline-none bg-transparent placeholder-gray-400 text-gray-700"
         />
+      </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
