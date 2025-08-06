@@ -30,14 +30,14 @@ class TransactionView(APIView):
         status = check_status(user)
         if status == "Admin":
             paginator = PageNumberPagination()
-            paginator.page_size = 10  # Set the page size here
+            paginator.page_size = 50  # Set the page size here
             paginated_transactions = paginator.paginate_queryset(transactions, request)
             serializer = TransactionSerializer(paginated_transactions, many=True)
             return paginator.get_paginated_response(serializer.data)
         elif status == "Technician":
             transactions = transactions.filter(transaction_to=user.person)
             paginator = PageNumberPagination()
-            paginator.page_size = 10
+            paginator.page_size = 50
             paginated_transactions = paginator.paginate_queryset(transactions, request)
             serializer = TransactionSerializer(paginated_transactions, many=True)
             return paginator.get_paginated_response(serializer.data)

@@ -216,7 +216,7 @@ import { IoAddCircleSharp } from "react-icons/io5";
   <div className="py-4  max-w-md">
     {/* Add inventory button */}
     <div 
-      onClick={() => router.push('/repair/inventory/addProduct')} 
+      onClick={() => router.push('/inventory/purchase/form')} 
       className="flex items-center gap-3 p-3 mb-4 bg-sky-600 text-white hover:bg-sky-700 transition-colors duration-200 cursor-pointer rounded-lg shadow-sm"
     >
       <IoAddCircleSharp className="text-lg" />
