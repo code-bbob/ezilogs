@@ -19,51 +19,123 @@ export default function AllPurchaseTransactions() {
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [currentPage, setCurrentPage] = useState()
-  const [totalPages, setTotalPages] = useState()
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [localSearchTerm, setLocalSearchTerm] = useState('')
-  const [metadata, setMetadata] = useState({
+  const [isNavigating, setIsNavigating] = useState(false)
+  const [pagination, setPagination] = useState({
     next: null,
     previous: null,
-    count: 0
+    count: 0,
+    totalPages: 1,
+    currentPage: 1
   })
 
   async function fetchPaginatedData(url) {
+    setIsNavigating(true)
     setLoading(true)
     try {
       const fetchUrl = url.startsWith('http') ? url : `${baseURL}${url}`
-      const res = await fetch(fetchUrl, { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' })
+      const res = await fetch(fetchUrl, { 
+        headers: { Authorization: `Bearer ${token}` }, 
+        credentials: 'include' 
+      })
       const data = await res.json()
-      // Handle paginated response or plain list
-      const list = Array.isArray(data) ? data : data.results
-      setTransactions(list)
-      if (Array.isArray(data)) {
-        setMetadata({ next: null, previous: null, count: list.length })
-        setTotalPages(1); setCurrentPage(1)
+      
+      // Handle DRF paginated response
+      if (data.results) {
+        setTransactions(data.results)
+        setPagination({
+          next: data.next,
+          previous: data.previous,
+          count: data.count,
+          totalPages: Math.ceil(data.count / 10),
+          currentPage: getCurrentPageFromUrl(url)
+        })
+        setCurrentPage(getCurrentPageFromUrl(url))
+        setTotalPages(Math.ceil(data.count / 10))
       } else {
-        setMetadata({ next: data.next, previous: data.previous, count: data.count })
-        setTotalPages(data.total_pages); setCurrentPage(data.page)
+        // Fallback for non-paginated response
+        setTransactions(Array.isArray(data) ? data : [])
+        setPagination({
+          next: null,
+          previous: null,
+          count: Array.isArray(data) ? data.length : 0,
+          totalPages: 1,
+          currentPage: 1
+        })
+        setCurrentPage(1)
+        setTotalPages(1)
       }
-    } catch { setError('Failed to fetch data') } finally { setLoading(false) }
+    } catch (err) {
+      setError('Failed to fetch data')
+      console.error('Fetch error:', err)
+    } finally {
+      setLoading(false)
+      setIsNavigating(false)
+    }
+  }
+
+  function getCurrentPageFromUrl(url) {
+    if (!url) return 1
+    const urlObj = new URL(url, baseURL)
+    const page = urlObj.searchParams.get('page')
+    return page ? parseInt(page, 10) : 1
+  }
+
+  const buildFilteredUrl = (page = 1) => {
+    const params = new URLSearchParams();
+    if (page > 1) params.append('page', page.toString());
+    if (localSearchTerm) params.append('search', localSearchTerm);
+    if (startDate && endDate) {
+      params.append('start_date', startDate);
+      params.append('end_date', endDate);
+    }
+    return `inventory/purchasetransaction/${params.toString() ? `?${params.toString()}` : ''}`;
   }
 
   const fetchInitData = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${baseURL}inventory/purchasetransaction/`, { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' })
+      const res = await fetch(`${baseURL}inventory/purchasetransaction/`, { 
+        headers: { Authorization: `Bearer ${token}` }, 
+        credentials: 'include' 
+      })
       const data = await res.json()
-      const list = Array.isArray(data) ? data : data.results
-      setTransactions(list)
-      if (Array.isArray(data)) {
-        setMetadata({ next: null, previous: null, count: list.length })
-        setTotalPages(1); setCurrentPage(1)
+      
+      // Handle DRF paginated response
+      if (data.results) {
+        setTransactions(data.results)
+        setPagination({
+          next: data.next,
+          previous: data.previous,
+          count: data.count,
+          totalPages: Math.ceil(data.count / 10),
+          currentPage: 1
+        })
+        setCurrentPage(1)
+        setTotalPages(Math.ceil(data.count / 10))
       } else {
-        setMetadata({ next: data.next, previous: data.previous, count: data.count })
-        setTotalPages(data.total_pages); setCurrentPage(data.page)
+        // Fallback for non-paginated response
+        setTransactions(Array.isArray(data) ? data : [])
+        setPagination({
+          next: null,
+          previous: null,
+          count: Array.isArray(data) ? data.length : 0,
+          totalPages: 1,
+          currentPage: 1
+        })
+        setCurrentPage(1)
+        setTotalPages(1)
       }
-    } catch { setError('Failed to fetch initial data') } finally { setLoading(false) }
+    } catch (err) {
+      setError('Failed to fetch initial data')
+      console.error('Fetch error:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -74,16 +146,36 @@ export default function AllPurchaseTransactions() {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await fetch(`${baseURL}inventory/purchasetransaction/?search=${localSearchTerm}`, { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' })
+      const res = await fetch(`${baseURL}inventory/purchasetransaction/?search=${localSearchTerm}`, { 
+        headers: { Authorization: `Bearer ${token}` }, 
+        credentials: 'include' 
+      })
       const data = await res.json()
-      const list = Array.isArray(data) ? data : data.results
-      setTransactions(list)
-      if (Array.isArray(data)) {
-        setMetadata({ next: null, previous: null, count: list.length })
-        setTotalPages(1); setCurrentPage(1)
+      
+      // Handle DRF paginated response
+      if (data.results) {
+        setTransactions(data.results)
+        setPagination({
+          next: data.next,
+          previous: data.previous,
+          count: data.count,
+          totalPages: Math.ceil(data.count / 10),
+          currentPage: 1
+        })
+        setCurrentPage(1)
+        setTotalPages(Math.ceil(data.count / 10))
       } else {
-        setMetadata({ next: data.next, previous: data.previous, count: data.count })
-        setTotalPages(Math.ceil(data.count / 10)); setCurrentPage(1)
+        // Fallback for non-paginated response
+        setTransactions(Array.isArray(data) ? data : [])
+        setPagination({
+          next: null,
+          previous: null,
+          count: Array.isArray(data) ? data.length : 0,
+          totalPages: 1,
+          currentPage: 1
+        })
+        setCurrentPage(1)
+        setTotalPages(1)
       }
     } catch (err) {
       setError('Failed to search transactions')
@@ -96,16 +188,36 @@ export default function AllPurchaseTransactions() {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await fetch(`${baseURL}inventory/purchasetransaction/?start_date=${startDate}&end_date=${endDate}`, { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' })
+      const res = await fetch(`${baseURL}inventory/purchasetransaction/?start_date=${startDate}&end_date=${endDate}`, { 
+        headers: { Authorization: `Bearer ${token}` }, 
+        credentials: 'include' 
+      })
       const data = await res.json()
-      const list = Array.isArray(data) ? data : data.results
-      setTransactions(list)
-      if (Array.isArray(data)) {
-        setMetadata({ next: null, previous: null, count: list.length })
-        setTotalPages(1); setCurrentPage(1)
+      
+      // Handle DRF paginated response
+      if (data.results) {
+        setTransactions(data.results)
+        setPagination({
+          next: data.next,
+          previous: data.previous,
+          count: data.count,
+          totalPages: Math.ceil(data.count / 10),
+          currentPage: 1
+        })
+        setCurrentPage(1)
+        setTotalPages(Math.ceil(data.count / 10))
       } else {
-        setMetadata({ next: data.next, previous: data.previous, count: data.count })
-        setTotalPages(Math.ceil(data.count / 10)); setCurrentPage(1)
+        // Fallback for non-paginated response
+        setTransactions(Array.isArray(data) ? data : [])
+        setPagination({
+          next: null,
+          previous: null,
+          count: Array.isArray(data) ? data.length : 0,
+          totalPages: 1,
+          currentPage: 1
+        })
+        setCurrentPage(1)
+        setTotalPages(1)
       }
     } catch (err) {
       setError('Failed to filter transactions by date')
@@ -125,8 +237,14 @@ export default function AllPurchaseTransactions() {
         credentials: 'include'
       });
       if (!res.ok) throw new Error();
-      // Refresh list
-      await fetchInitData();
+      
+      // Refresh current page or go to first page if current page would be empty
+      const remainingItems = pagination.count - 1;
+      const maxPage = Math.ceil(remainingItems / 10);
+      const targetPage = currentPage > maxPage ? Math.max(1, maxPage) : currentPage;
+      
+      const url = buildFilteredUrl(targetPage);
+      await fetchPaginatedData(url);
     } catch {
       setError('Failed to delete transaction');
     } finally {
@@ -136,16 +254,31 @@ export default function AllPurchaseTransactions() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center bg-gray-100 text-gray-800">
-        Loading...
+      <div className="flex items-center justify-center h-screen bg-gray-100 text-gray-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-lg">Loading purchase transactions...</p>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center bg-gray-100 text-red-500">
-        {error}
+      <div className="flex items-center justify-center h-screen bg-gray-100 text-red-600">
+        <div className="text-center">
+          <div className="text-red-500 mb-2 text-2xl">⚠️</div>
+          <p className="text-lg">{error}</p>
+          <Button 
+            onClick={() => {
+              setError(null)
+              fetchInitData()
+            }}
+            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Try Again
+          </Button>
+        </div>
       </div>
     )
   }
@@ -218,6 +351,21 @@ export default function AllPurchaseTransactions() {
               Search by Date
             </Button>
           </form>
+
+          {(localSearchTerm || startDate || endDate) && (
+            <Button 
+              onClick={() => {
+                setLocalSearchTerm('')
+                setStartDate('')
+                setEndDate('')
+                fetchInitData()
+              }}
+              variant="outline"
+              className="w-full lg:w-auto border-gray-300 text-gray-700 hover:bg-gray-100"
+            >
+              Clear Filters
+            </Button>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -264,20 +412,22 @@ export default function AllPurchaseTransactions() {
 
         <div className="flex justify-center mt-6 space-x-4">
           <Button
-            onClick={() => fetchPaginatedData(metadata.previous)}
-            disabled={!metadata.previous}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800"
+            onClick={() => fetchPaginatedData(pagination.previous)}
+            disabled={!pagination.previous || isNavigating}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ChevronLeft className="w-4 h-4 mr-2 text-gray-800" />
-            Previous
+            {isNavigating ? 'Loading...' : 'Previous'}
           </Button>
-          <span className="text-gray-700 self-center">Page {currentPage} of {totalPages}</span>
+          <span className="text-gray-700 self-center">
+            Page {currentPage} of {totalPages} ({pagination.count} total)
+          </span>
           <Button
-            onClick={() => fetchPaginatedData(metadata.next)}
-            disabled={!metadata.next}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800"
+            onClick={() => fetchPaginatedData(pagination.next)}
+            disabled={!pagination.next || isNavigating}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next
+            {isNavigating ? 'Loading...' : 'Next'}
             <ChevronRight className="w-4 h-4 ml-2 text-gray-800" />
           </Button>
         </div>
