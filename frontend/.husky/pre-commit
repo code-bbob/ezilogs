@@ -1,0 +1,13 @@
+
+
+npm run check-format-staged ||
+(
+    echo '🤢🤮🤢🤮 CODES NOT FORMATTED COREECTLY
+            Prettier Check Failed.
+
+            check eslint errors    
+        ';
+    false;
+)
+# If everything passes... Now we can commit
+echo '✅ codes are formatted and ready to commit.'
