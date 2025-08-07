@@ -19,7 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { addDays, format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { userInfo, transactionsApi } from '@/api/GetRepairProducts';
+import { userInfo, transactionsApi, nextPageApi } from '@/api/GetRepairProducts';
 
 const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -29,7 +29,7 @@ function WalletPage() {
     const userData = useAppSelector((state) => state.user.value)
     console.log("userData i profit", userData)
     const [tdata, setTData] = useState([])
-    const [data, setData] = useState([])
+    const [data, setData] = useState({ next: null, previous: null, results: [] })
     const [chosenData, setChosenData] = useState([])
 
 
@@ -48,12 +48,12 @@ function WalletPage() {
         }
     };
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = async (url) => {
         try {
-            const transactions = await transactionsApi();
+            const transactions = url ? await nextPageApi(url) : await transactionsApi();
             console.log("Fetched transactions:", transactions)
             setData(transactions)
-            setChosenData(transactions)
+            setChosenData(transactions.results)
         } catch (error) {
             console.error('Error fetching transactions:', error);
         }
@@ -65,7 +65,7 @@ function WalletPage() {
         someTechFunction();
         fetchTransactions();
     }, [])
-
+console.log(chosenData, "chosen data");
 
 
     return (
@@ -138,6 +138,22 @@ function WalletPage() {
                         <p className='flex justify-center text-sky-600 items-center'>Fetching Data. Please Wait...</p>
                     )}
                 </div>
+            </div>
+            <div className='flex justify-between w-[95%] mx-auto my-4'>
+                <button
+                    disabled={!data.previous}
+                    onClick={() => fetchTransactions(data.previous)}
+                    className='px-4 py-2 bg-sky-500 text-white rounded disabled:bg-gray-300'
+                >
+                    Previous
+                </button>
+                <button
+                    disabled={!data.next}
+                    onClick={() => fetchTransactions(data.next)}
+                    className='px-4 py-2 bg-sky-500 text-white rounded disabled:bg-gray-300'
+                >
+                    Next
+                </button>
             </div>
         </>
     )
