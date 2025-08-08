@@ -56,10 +56,10 @@ export default function AddPurchaseTransaction() {
       try {
         setLoading(true)
         const [catsRes, itemsRes] = await Promise.all([
-          fetch(`${baseUrl}/inventory/category/`, {
+          fetch(`${baseUrl}inventory/category/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch(`${baseUrl}/inventory/item/`, {
+          fetch(`${baseUrl}inventory/item/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ])
@@ -157,7 +157,7 @@ export default function AddPurchaseTransaction() {
         })),
       }
 
-      const response = await fetch(`${baseUrl}/inventory/purchasetransaction/`, {
+      const response = await fetch(`${baseUrl}inventory/purchasetransaction/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
