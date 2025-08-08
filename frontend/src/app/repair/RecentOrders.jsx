@@ -216,7 +216,7 @@ import { IoAddCircleSharp } from "react-icons/io5";
   <div className="py-4  max-w-md">
     {/* Add inventory button */}
     <div 
-      onClick={() => router.push('/inventory/purchase/form')} 
+      onClick={() => router.push('/purchase/form')} 
       className="flex items-center gap-3 p-3 mb-4 bg-sky-600 text-white hover:bg-sky-700 transition-colors duration-200 cursor-pointer rounded-lg shadow-sm"
     >
       <IoAddCircleSharp className="text-lg" />
@@ -256,7 +256,7 @@ import { IoAddCircleSharp } from "react-icons/io5";
                 <span className={`text-sm text-wrap truncate pr-8 ${
                   field.value?.id === item.id ? 'font-semibold text-sky-900' : 'text-gray-700 '
                 }`}>
-                  {item.brand_name + " " + item.name + " " + item.category_name}
+                  {item.name + " " + item.category_name}
                 </span>
                 {field.value?.id === item.id && (
                   <div className="flex-shrink-0">
