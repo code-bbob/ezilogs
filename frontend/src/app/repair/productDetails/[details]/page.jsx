@@ -80,6 +80,7 @@ function ProductDetails() {
     'taken_by',
     'outside_cost',
     'repaired_by',
+    'updated_at'
   ];
 
   const renderDetails = (details) => (

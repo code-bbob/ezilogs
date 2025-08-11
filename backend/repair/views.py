@@ -82,9 +82,7 @@ class RepairView(APIView):
 
     def patch(self,request):
         repair_id = request.data.get('repair_id',None)
-        print("HERE",repair_id)
         repair = Repair.objects.get(repair_id=repair_id)
-        print("Not HERE",repair)
         data=request.data
         credit_id = request.data.get('credit_id',None)
         if check_status(request.user) != "Admin":
