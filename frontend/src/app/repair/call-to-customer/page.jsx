@@ -52,6 +52,14 @@ export default  function DemoPage() {
   const [data, setData] = useState([])  
   const [isCompleted, setIsCompleted] = useState(false)
   
+  // Helper to detect stale ( > 1 day old ) updated_at timestamps
+  const isStale = (updatedAt) => {
+    if (!updatedAt) return false;
+    const updatedTime = new Date(updatedAt).getTime();
+    if (isNaN(updatedTime)) return false;
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    return Date.now() - updatedTime > ONE_DAY_MS;
+  }
 
   const AmountPaidCell = ({ value, row, table }) => {
           const dueOriginal = parseFloat(row.getValue("due"))
@@ -296,9 +304,9 @@ userData?.userinfo?.role === 'Admin' && (
         header: "Products",
         cell: ({ row }) => {
 
-          const {customer_name } = row.original
+          const {customer_name, updated_at } = row.original
 
-          return <div  onClick={() => handleRowClick(row)} className="capitalize hover:cursor-pointer"> {row.getValue("phone_model")} by {customer_name} </div>
+          return <div  onClick={() => handleRowClick(row)} className={`capitalize hover:cursor-pointer ${isStale(updated_at) ? 'text-red-500' : ''}`}> {row.getValue("phone_model")} by {customer_name} </div>
         },
       },
     {
