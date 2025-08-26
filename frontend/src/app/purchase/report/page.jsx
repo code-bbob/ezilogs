@@ -121,17 +121,22 @@ export default function PurchaseReport() {
     window.URL.revokeObjectURL(url)
   }
 
+  // On first load, default to today's date and fetch with those filters
   useEffect(() => {
-    fetchPurchases()
-  }, [])
-
-  useEffect(() => {
-    fetchPurchases()
+    const today = new Date()
+    const yyyy = today.getFullYear()
+    const mm = String(today.getMonth() + 1).padStart(2, '0')
+    const dd = String(today.getDate()).padStart(2, '0')
+    const todayStr = `${yyyy}-${mm}-${dd}`
+    setStartDate(todayStr)
+    setEndDate(todayStr)
+    fetchPurchases({ startDate: todayStr, endDate: todayStr, searchTerm: '' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 text-gray-800">
+      <div className="flex items-center justify-center h-[92vh] overflow-y-scroll bg-gray-50 text-gray-800">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           Loading...
@@ -142,7 +147,7 @@ export default function PurchaseReport() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 text-red-600">
+      <div className="flex items-center justify-center h-[92vh] overflow-y-scroll bg-gray-50 text-red-600">
         <div className="text-center">
           <div className="text-red-500 mb-2">⚠️</div>
           {error}
@@ -152,7 +157,7 @@ export default function PurchaseReport() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 p-6 print:bg-white print:text-black print:p-4">
+    <div className="h-[92vh] overflow-y-scroll bg-gray-50 text-gray-900 p-6 print:bg-white print:text-black print:p-4">
       <style jsx global>{`
         @media print {
           .no-print { display: none !important; }

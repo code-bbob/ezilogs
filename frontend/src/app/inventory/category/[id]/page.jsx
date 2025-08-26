@@ -17,11 +17,25 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { getItems, postItem, getCategories, deleteItem } from '@/api/GetRepairProducts';
 
+// Helper: sort by stock (quantity) desc, then by name
+const sortByStock = (items) =>
+  (items || [])
+    .slice()
+    .sort((a, b) => {
+      const qa = Number(a?.quantity ?? 0)
+      const qb = Number(b?.quantity ?? 0)
+      if (qb !== qa) return qb - qa
+      // tie-breaker by name
+      return String(a?.name || '').localeCompare(String(b?.name || ''))
+    })
+
 export default function InventoryPageComponent() {
     const router = useRouter()
     const params = useParams()
     const id = params.id
+  const [allItems, setAllItems] = useState([])
   const [filteredItems, setFilteredItems] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [selectedItems, setSelectedItems] = useState([])
   const [categoryName, setCategoryName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -50,7 +64,7 @@ export default function InventoryPageComponent() {
     for (const itemId of selectedItems) {
       try { await deleteItem(itemId); } catch(err) { console.error(`Failed deleting ${itemId}`, err); }
     }
-    setFilteredItems(prev => prev.filter(i => !selectedItems.includes(i.id)));
+    setAllItems(prev => prev.filter(i => !selectedItems.includes(i.id)));
     setSelectedItems([]);
   };
 
@@ -60,7 +74,8 @@ export default function InventoryPageComponent() {
     async function fetchData() {
       try {
         const itemsData = await getItems(id)
-        setFilteredItems(itemsData)
+        setAllItems(itemsData)
+        setFilteredItems(sortByStock(itemsData))
         const categories = await getCategories()
         const current = categories.find(cat => cat.id === parseInt(id))
         setCategoryName(current?.name || '')
@@ -74,6 +89,16 @@ export default function InventoryPageComponent() {
     }
     fetchData()
   }, [id])
+
+  // Derive filtered list from allItems + search term
+  useEffect(() => {
+    const q = searchTerm.trim().toLowerCase()
+    let list = sortByStock(allItems)
+    if (q) {
+      list = list.filter(i => String(i?.name || '').toLowerCase().includes(q))
+    }
+    setFilteredItems(list)
+  }, [allItems, searchTerm])
 
   console.log("items", filteredItems)
 
@@ -92,7 +117,13 @@ export default function InventoryPageComponent() {
   return (
       <div className="p-3 bg-inherit text-black overflow-y-scroll h-[90%]">
         <div className="max-w-6xl mx-auto">
-        <div className="flex justify-end mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search items by name"
+            className="max-w-sm"
+          />
           <Button
             disabled={selectedItems.length === 0}
             onClick={deleteSelected}
@@ -139,7 +170,7 @@ export default function InventoryPageComponent() {
                           if (confirm(`Delete item '${item.name}'?`)) {
                             try {
                               await deleteItem(item.id)
-                              setFilteredItems(prev => prev.filter(i => i.id !== item.id))
+                              setAllItems(prev => prev.filter(i => i.id !== item.id))
                             } catch (err) {
                               console.error('Delete failed', err)
                             }
@@ -221,7 +252,7 @@ export default function InventoryPageComponent() {
               <Button type="button" onClick={async () => {
                   const data = { name: newItemName, quantity: newItemQuantity, cost: newItemCost, category: id };
                   const created = await postItem(data);
-                  setFilteredItems([...filteredItems, created]);
+                  setAllItems(prev => [...(prev || []), created]);
                   setIsDialogOpen(false);
                 }}
                 className="bg-purple-600 hover:bg-purple-700 text-black">

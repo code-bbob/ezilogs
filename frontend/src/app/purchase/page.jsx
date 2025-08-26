@@ -265,7 +265,7 @@ export default function AllPurchaseTransactions() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100 text-red-600">
+      <div className="flex items-center h-screen overflow-y-scroll justify-center bg-gray-100 text-red-600">
         <div className="text-center">
           <div className="text-red-500 mb-2 text-2xl">⚠️</div>
           <p className="text-lg">{error}</p>
