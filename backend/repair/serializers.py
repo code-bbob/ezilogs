@@ -13,7 +13,7 @@ class RepairItemSerializer(serializers.ModelSerializer):
         fields = ['item','quantity','item_name']
 
     def get_item_name(self, obj):
-        return obj.item.name
+        return f"{obj.item.name} {obj.item.category.name}" if obj.item and obj.item.category else None
 
 class AdminRepairSerializer(serializers.ModelSerializer):
     repaired_by_name = serializers.SerializerMethodField(read_only=True)

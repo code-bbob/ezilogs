@@ -160,11 +160,25 @@ export default function InventoryPageComponent() {
                         onChange={() => toggleSelectItem(item.id)}
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => router.push(`/inventory/item/${item.id}`)}
+                        className="text-sky-700 hover:text-sky-900 hover:underline"
+                        title="View usage report"
+                      >
+                        {item.name}
+                      </button>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.quantity}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.cost.toFixed(2)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{(item.quantity * item.cost).toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center gap-3">
+                      <button
+                        onClick={() => router.push(`/inventory/item/${item.id}`)}
+                        className="px-2 py-1 rounded border border-sky-600 text-sky-700 hover:bg-sky-50"
+                      >
+                        Usage
+                      </button>
                       <button
                         onClick={async () => {
                           if (confirm(`Delete item '${item.name}'?`)) {

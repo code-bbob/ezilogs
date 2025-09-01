@@ -38,3 +38,9 @@ class Purchase(models.Model):
     price = models.FloatField()
     transaction = models.ForeignKey(PurchaseTransaction,on_delete=models.CASCADE,related_name='purchases')
 
+class PurchaseReturn(models.Model):
+    date = models.DateField(auto_now_add=True)
+    enterprise = models.ForeignKey('enterprise.Enterprise', on_delete=models.CASCADE,related_name='all_purchase_return')
+    # branch = models.ForeignKey(Branch,related_name='purchase_return',on_delete=models.CASCADE, null=True, blank=True)
+    purchase_transaction = models.ForeignKey(PurchaseTransaction, on_delete=models.CASCADE,related_name='purchase_return')
+

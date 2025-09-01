@@ -17,11 +17,10 @@ const navItems = [
   { name: "repair", href: "/repair", icon: <HiMiniWrenchScrewdriver size={21} /> },
   { name: "search", href: "/repair/search", icon: <FaSearch size={21} /> },
   { name: "profit", href: "/repair/profit", icon: <MdAttachMoney size={21} /> },
-  { name: "transactions", href: "/transactions", icon: <TbTransactionDollar size={21} /> },
   { name: "wallet", href: "/wallet", icon: <FaWallet size={21} /> },
   { name: "credits", href: "/repair/credits", icon: <FaWallet size={21} /> },
   { name: "inventory", href: "/inventory", icon: <MdSpaceDashboard size={21} /> },
-  { name: "purchase", href: "/purchase", icon: <MdAttachMoney size={21} /> },
+  { name: "purchase", href: "/purchase", icon: <TbTransactionDollar size={21} /> },
 ]
 
 const Navbar = () => {

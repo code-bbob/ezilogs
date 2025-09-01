@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
 from .models import PurchaseTransaction,Category,Item,Purchase
+from repair.models import RepairItem
 from .serializers import PurchaseTransactionSerializer,CategorySerializer,ItemSerializer,PurchaseSerializer
 from django.db import transaction
 from django.utils.dateparse import parse_date
@@ -225,5 +226,70 @@ class PurchaseReportView(APIView):
                 'total_amount': total_amount,
                 'total_quantity': total_quantity,
                 'average_price': total_amount / total_purchases if total_purchases > 0 else 0
+            }
+        })
+
+
+class ItemUsageReportView(APIView):
+    """
+    Returns the list of repairs in which a given inventory item was used,
+    with dates and quantities, scoped to the user's enterprise.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, item_id: int):
+        enterprise = request.user.person.enterprise
+
+        usages = (
+            RepairItem.objects
+            .filter(item_id=item_id, repair__enterprise_repairs__name=enterprise)
+            .select_related('repair', 'item', 'item__category')
+            .order_by('-repair__updated_at', '-id')
+        )
+
+        # Optional date filtering using either repair.updated_at (date) or fallback to received_date
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        if start_date and end_date:
+            start_date_parsed = parse_date(start_date)
+            end_date_parsed = parse_date(end_date)
+            if start_date_parsed and end_date_parsed:
+                usages = usages.filter(
+                    Q(repair__updated_at__date__range=(start_date_parsed, end_date_parsed)) |
+                    Q(repair__updated_at__isnull=True, repair__received_date__range=(start_date_parsed, end_date_parsed))
+                )
+
+        data = []
+        total_quantity = 0
+        item_meta = None
+        for u in usages:
+            r = u.repair
+            total_quantity += (u.quantity or 0)
+            if item_meta is None and u.item:
+                item_meta = {
+                    'id': u.item.id,
+                    'name': u.item.name,
+                    'category_id': u.item.category.id if u.item.category else None,
+                    'category_name': u.item.category.name if u.item.category else None,
+                }
+            data.append({
+                'repair_pk': r.id,
+                'repair_id': r.repair_id,
+                'customer_name': r.customer_name,
+                'customer_phone_number': r.customer_phone_number,
+                'phone_model': r.phone_model,
+                'repair_status': r.repair_status,
+                'quantity': u.quantity,
+                'used_date': r.updated_at or r.received_date,
+                'received_date': r.received_date,
+                'delivery_date': r.delivery_date,
+            })
+
+        return Response({
+            'item': item_meta,
+            'usage': data,
+            'summary': {
+                'total_usages': len(data),
+                'total_quantity': total_quantity,
             }
         })

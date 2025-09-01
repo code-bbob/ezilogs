@@ -619,6 +619,31 @@ async function deleteItem(id) {
     }
 }
 
+// Item usage report for a given inventory item
+async function getItemUsage(itemId, { startDate, endDate } = {}) {
+    const token = getCookie('accesstoken')
+    const params = new URLSearchParams()
+    if (startDate) params.append('start_date', startDate)
+    if (endDate) params.append('end_date', endDate)
+    const qs = params.toString() ? `?${params.toString()}` : ''
+    const res = await fetch(
+        `${baseURL}inventory/item-usage/${itemId}/${qs}`,
+        {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            credentials: 'include'
+        }
+    )
+    const result = await res.json()
+    return result
+}
+
+// Wrapper for deleting a repair by repair_id to align with UI usage
+async function deleteRepair(repair_id) {
+    return await deleteProductsApi(repair_id)
+}
+
 export  {
     productsApi,
     postProductsApi,
@@ -651,5 +676,8 @@ export  {
     deleteCategory,
     postItem,
     deleteItem
+    ,
+    getItemUsage,
+    deleteRepair
 }
 
