@@ -391,6 +391,7 @@ export default function AllPurchaseTransactions() {
                     <div key={`${transaction.id}-${index}`} className="mb-4 last:mb-0 p-4 bg-gray-50 rounded hover:bg-gray-100 transition-colors duration-200">
                       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-2">
                         <span className="text-gray-900 font-medium mb-2 lg:mb-0">{item.item_name}</span>
+                        <span className="text-sm text-gray-600">Category: {item?.item_category}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm text-gray-700">
                         <span className="text-purple-600">Quantity: {item.quantity}</span>
