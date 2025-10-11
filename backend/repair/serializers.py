@@ -169,5 +169,5 @@ class TechnicianRepairSerializer(serializers.ModelSerializer):
 class StaffRepairSerializer(serializers.ModelSerializer):
     class Meta:
         model = Repair
-        exclude = ['repair_cost_price','cost_price_description','repair_profit','technician_profit','my_profit','outside_cost']
+        exclude = ['repair_cost_price','repair_profit','technician_profit','my_profit','outside_cost']
 
