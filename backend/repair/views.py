@@ -72,7 +72,7 @@ class RepairView(APIView):
 
     def post(self,request):
         data = request.data
-        serializer = AdminRepairSerializer(data=data)
+        serializer = AdminRepairSerializer(data=data, context={'request': request})
         if serializer.is_valid(raise_exception=True):
             user = request.user
             enterprise = user.person.enterprise

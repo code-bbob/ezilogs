@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Repair,Outside,RepairItem
 from inventory.models import Item
 from django.db import transaction
+import timezone
+from .permissions import check_status
 
 
 
@@ -69,6 +71,18 @@ class AdminRepairSerializer(serializers.ModelSerializer):
 
     def get_repaired_by_name(self, obj):
         return obj.repaired_by.user.name if obj.repaired_by and obj.repaired_by.user else None
+
+
+    @transaction.atomic
+    def create(self,validated_data):
+        today_date = timezone.now().date()
+        if validated_data.get('received_date', None) != today_date:
+            is_admin = check_status(self.context['request'].user)
+            if is_admin != "Admin":
+                raise serializers.ValidationError("Only Admin can set received date other than today")
+        repair = Repair.objects.create(**validated_data)    
+        return repair
+    
 
 
     @transaction.atomic
