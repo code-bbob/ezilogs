@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Repair,Outside,RepairItem
 from inventory.models import Item
 from django.db import transaction
-import timezone
+from django.utils import timezone
 from .permissions import check_status
 
 
