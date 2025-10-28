@@ -22,6 +22,15 @@ export default  function DemoPage() {
   
 
   const columns = [
+{
+        accessorKey: "received_date",
+        header: "Received Date",
+        cell: ({ row }) => {
+
+          return <div  onClick={() => handleRowClick(row)}  className="capitalize "> {row.getValue("received_date").slice(5,)} </div>
+        },
+      },
+
     {
         accessorKey: "phone_model",
         header: "Products",
